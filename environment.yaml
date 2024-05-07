@@ -7,12 +7,15 @@ channels:
   - iopath
   - bottler
   - defaults
+  - pytorch3d
 dependencies:
   - python=3.8
   - pytorch-cuda=11.6
   - pytorch=1.13.0
-  - nvidiacub
   - torchvision
+  - mkl=2024.0.0
+  - pytorch3d=0.7.2=py38_cu116_pyt1130
+  - nvidiacub
   - fvcore
   - iopath
   - pyembree

@@ -70,6 +70,7 @@ class TestDataset:
         self.smpl_data = SMPLX()
 
         if self.hps_type == "pymafx":
+            print(path_config.SMPL_MEAN_PARAMS)
             self.hps = pymaf_net(path_config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
             self.hps.load_state_dict(torch.load(path_config.CHECKPOINT_FILE)["model"], strict=True)
             self.hps.eval()

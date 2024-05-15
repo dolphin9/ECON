@@ -98,7 +98,7 @@ if __name__ == "__main__":
         "image_dir": args.in_dir,
         "seg_dir": args.seg_dir,
         "use_seg": True,    # w/ or w/o segmentation
-        "hps_type": cfg.bni.hps_type,    # pymafx/pixie
+        "hps_type": 'pymafx', #cfg.bni.hps_type,    # pymafx/pixie
         "vol_res": cfg.vol_res,
         "single": args.multi,
     }

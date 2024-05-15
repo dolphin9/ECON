@@ -15,4 +15,5 @@ einops
 boto3
 open3d
 xatlas
+numpy==1.23
 git+https://github.com/YuliangXiu/rembg.git

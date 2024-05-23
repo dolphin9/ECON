@@ -627,7 +627,7 @@ class SMPLH(SMPL):
         self.use_pca = use_pca
         self.num_pca_comps = num_pca_comps
         self.flat_hand_mean = flat_hand_mean
-
+        print(type(data_struct.hands_componentsl[:num_pca_comps]))
         left_hand_components = data_struct.hands_componentsl[:num_pca_comps]
         right_hand_components = data_struct.hands_componentsr[:num_pca_comps]
 
@@ -1241,11 +1241,28 @@ class SMPLX(SMPLH):
             if hasattr(self, "transl"):
                 transl = self.transl
 
+        print(left_hand_pose.shape)
         if self.use_pca:
+            #type(self.left_hand_components)=torch.Tensor
+            #self.left_hand_components.shape : [12, 45]
+            #left_hand_pose.shape:[15,3]
+            #einsum 张量操作，下面是矩阵乘法
+            
             left_hand_pose = torch.einsum("bi,ij->bj", [left_hand_pose, self.left_hand_components])
             right_hand_pose = torch.einsum(
                 "bi,ij->bj", [right_hand_pose, self.right_hand_components]
             )
+        # else:
+        #     left_hand_pose = left_hand_pose.flatten()
+        #     right_hand_pose = right_hand_pose.flatten()
+        
+        print(f'global_orient:{global_orient.shape}')
+        print(f'body_pose:{body_pose.shape}')
+        print(f'jaw_pose:{jaw_pose.shape}')
+        print(f'leye_pose:{leye_pose.shape}')
+        print(f'reye_pose:{reye_pose.shape}')
+        print(f'left_hand_pose:{left_hand_pose.shape}')
+        print(f'right_hand_pose:{right_hand_pose.shape}')
 
         full_pose = torch.cat(
             [
@@ -1257,8 +1274,10 @@ class SMPLX(SMPLH):
                 left_hand_pose,
                 right_hand_pose,
             ],
-            dim=1,
+            #dim=0,
+            dim = 1,
         )
+        #full_pose = full_pose.permute(1,0)
 
         if pose_type == "t-pose":
             full_pose *= 0.0

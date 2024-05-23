@@ -48,6 +48,18 @@ from lib.net.geometry import rot6d_to_rotmat, rotation_matrix_to_angle_axis
 
 torch.backends.cudnn.benchmark = True
 
+def view_dict_items(data,perfix=''):
+        for key,value in data.items():
+            print(f'{perfix}{key}:',end='')
+            if type(value) == torch.Tensor:
+                print(perfix,value.shape)
+            elif type(value) == dict:
+                print()
+                view_dict_items(value,perfix+'\t')
+            else:
+                print(perfix,value)
+
+
 if __name__ == "__main__":
 
     # loading cfg file
@@ -124,6 +136,55 @@ if __name__ == "__main__":
 
     for data in pbar:
 
+        #view_dict_items(data)
+        #breakpoint()   
+        # img_icon: [1, 3, 512, 512]
+        # img_crop: [1, 4, 512, 512]
+        # img_hps: [1, 3, 224, 224]
+        # img_raw: [1, 3, 1280, 720]
+        # img_mask: [1, 512, 512]
+        # uncrop_param:
+        #         ori_shape:       [1280, 720]
+        #         box_shape:       [512, 512]
+        #         square_shape:    [1024, 1024]
+        #         M_square:        [1, 3, 3]
+        #         M_crop:  [1, 3, 3]
+        # landmark: [1, 33, 4]
+        # hands_visibility: [[True, False]]
+        # name: 000023
+        # smpl_faces: [1, 20908, 3]
+        # type: smplx
+        # vertices: [1, 10475, 3]
+        # transformed_vertices: [1, 10475, 3]
+        # face_kpt: [1, 68, 2]
+        # smplx_kpt: [1, 145, 2]
+        # smplx_kpt3d: [1, 145, 3]
+        # joints: [1, 145, 3]
+        # cam: [1, 3]
+        # body_cam: [1, 3]
+        # global_pose: [1, 1, 3, 3]
+        # partbody_pose: [1, 17, 3, 3]
+        # neck_pose: [1, 1, 3, 3]
+        # shape: [1, 200]
+        # exp: [1, 50]
+        # head_pose: [1, 1, 3, 3]
+        # jaw_pose: [1, 1, 3, 3]
+        # left_hand_pose: [1, 15, 3, 3]
+        # left_wrist_pose: [1, 1, 3, 3]
+        # right_wrist_pose: [1, 1, 3, 3]
+        # right_hand_pose: [1, 15, 3, 3]
+        # tex: [1, 50]
+        # light: [1, 27]
+        # abs_head_pose: [1, 1, 3, 3]
+        # abs_right_wrist_pose: [1, 1, 3, 3]
+        # abs_left_wrist_pose: [1, 1, 3, 3]
+        # body_pose: [1, 21, 6]
+        # global_orient: [1, 1, 6]
+        # betas: [1, 200]
+        # smpl_verts: [1, 10475, 3]
+        # scale: [1, 1, 1]
+        # trans: [1, 1, 3]
+
         losses = init_loss()
 
         pbar.set_description(f"{data['name']}")
@@ -157,6 +218,11 @@ if __name__ == "__main__":
         optimed_trans = data["trans"].requires_grad_(True)
         optimed_betas = data["betas"].requires_grad_(True)
         optimed_orient = data["global_orient"].requires_grad_(True)
+        # print(f'optimed_pose, {optimed_pose.shape}')  #[1,21,6]
+        # print(f'optimed_trans , {optimed_trans.shape}') #[1,1,3]
+        # print(f'optimed_betas, {optimed_betas.shape}') #[1,10]
+        # print(f'optimed_orient, {optimed_orient.shape}') #[1,1,6]
+        # breakpoint()
 
         optimizer_smpl = torch.optim.Adam([
             optimed_pose, optimed_trans, optimed_betas, optimed_orient
@@ -226,6 +292,18 @@ if __name__ == "__main__":
                 optimed_pose_mat = rot6d_to_rotmat(optimed_pose.view(-1,
                                                                      6)).view(N_body, N_pose, 3, 3)
 
+                
+                # tmp ={
+                #     'shape_params':optimed_betas,
+                #     'expression_params':tensor2variable(data["exp"], device),
+                #     'body_pose':optimed_pose_mat,
+                #     'global_pose':optimed_orient_mat,
+                #     'jaw_pose':tensor2variable(data["jaw_pose"], device),
+                #     'left_hand_pose':tensor2variable(data["left_hand_pose"], device),
+                #     'right_hand_pose':tensor2variable(data["right_hand_pose"], device)
+                # }
+                # view_dict_items(tmp)
+                # breakpoint()
                 smpl_verts, smpl_landmarks, smpl_joints = dataset.smpl_model(
                     shape_params=optimed_betas,
                     expression_params=tensor2variable(data["exp"], device),

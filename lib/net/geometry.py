@@ -181,7 +181,7 @@ def rotation_matrix_to_angle_axis(rotation_matrix):
     Shape:
         - Input: :math:`(N, 3, 4)`
         - Output: :math:`(N, 3)`
-
+ 
     Example:
         >>> input = torch.rand(2, 3, 4)  # Nx4x4
         >>> output = tgm.rotation_matrix_to_angle_axis(input)  # Nx3
@@ -680,3 +680,4 @@ def compute_twist_rotation(rotation_matrix, twist_axis):
                             keepdim=True) / torch.sum(twist_axis, dim=1, keepdim=True)
 
     return twist_rotation, twist_angle
+

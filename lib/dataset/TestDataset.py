@@ -77,12 +77,16 @@ class TestDataset:
             pixie_cfg.merge_from_list(["model.n_shape", 10, "model.n_exp", 10])
         elif self.hps_type == "pixie":
             self.hps = PIXIE(config=pixie_cfg, device=self.device)
+        
+        elif self.hps_type =='smplerx':
+            pass
 
         self.smpl_model = PIXIE_SMPLX(pixie_cfg.model).to(self.device)
 
         self.detector = detection.maskrcnn_resnet50_fpn(
             weights=detection.MaskRCNN_ResNet50_FPN_V2_Weights
         )
+            
         self.detector.eval()
 
         print(
@@ -155,6 +159,9 @@ class TestDataset:
             elif self.hps_type == 'pymafx':
                 batch = {k: v.to(self.device) for k, v in arr_dict["img_pymafx"].items()}
                 preds_dict, _ = self.hps.forward(batch)
+            elif self.hps_type == 'smplerx':
+                #这里应该把事先存好的文件读进predict
+                pass
 
         arr_dict["smpl_faces"] = (
             torch.as_tensor(self.smpl_data.smplx_faces.astype(np.int64)).unsqueeze(0).long().to(
@@ -183,6 +190,10 @@ class TestDataset:
             arr_dict["smpl_verts"] = preds_dict["vertices"]
             scale, tranX, tranY = preds_dict["cam"].split(1, dim=1)
             # 1.1435, 0.0128, 0.3520
+        elif self.hps_type == 'smplerx':
+            #这里应给arr_dict['']赋值
+            pass
+        
 
         arr_dict["scale"] = scale.unsqueeze(1)
         arr_dict["trans"] = (

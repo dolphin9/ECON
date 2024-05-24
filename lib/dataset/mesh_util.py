@@ -200,15 +200,18 @@ def get_smpl_model(model_type, gender):
 #######
 def load_fit_body(fitted_path, scale, smpl_type="smplx", smpl_gender="neutral", noise_dict=None):
 
-    param = np.load(fitted_path, allow_pickle=True)
-    # if type(param_npz) == np.lib.npyio.NpzFile:
-    #     param = {key: torch.as_tensor(param_npz[key]) for key in param_npz.keys()}
-    # else:
-    #     param = param_npz
+    data = np.load(fitted_path, allow_pickle=True)
+    if type(data) == np.lib.npyio.NpzFile:
+        param = {key: torch.as_tensor(data[key]) for key in data.keys()}
+    elif type(data) == np.ndarray:
+        param = data.tolist()
 
 
-    for key in param.keys():
-        param[key] = torch.as_tensor(param[key])
+    for item in param:
+        param[item] = torch.as_tensor(param[item])
+
+    # for key in param.keys():
+    #     param[key] = torch.as_tensor(param[key])
 
     #get the original model 获得原始模型
     smpl_model = get_smpl_model(smpl_type, smpl_gender)

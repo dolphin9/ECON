@@ -42,6 +42,7 @@ from lib.pixielib.pixie import PIXIE
 from lib.pixielib.utils.config import cfg as pixie_cfg
 from lib.pymafx.core import path_config
 from lib.pymafx.models import pymaf_net
+from dataset.loadnpz import loadnpz
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -62,6 +63,7 @@ class TestDataset:
 
         keep_lst = sorted(glob.glob(f"{self.image_dir}/*"))
         img_fmts = ["jpg", "png", "jpeg", "JPG", "bmp", "exr"]
+        smpl_fmts = ['pkl','npy','npz']
 
         self.subject_list = sorted([item for item in keep_lst if item.split(".")[-1] in img_fmts],
                                    reverse=False)
@@ -79,7 +81,10 @@ class TestDataset:
             self.hps = PIXIE(config=pixie_cfg, device=self.device)
         
         elif self.hps_type =='smplerx':
-            pass
+            smplerx_result_list =  sorted(glob.glob(f"{self.seg_dir}/*")) 
+            self.npz_list = sorted([item for item in smplerx_result_list if item.split(".")[-1] in smpl_fmts],
+                                   reverse = False)
+
 
         self.smpl_model = PIXIE_SMPLX(pixie_cfg.model).to(self.device)
 
@@ -160,8 +165,8 @@ class TestDataset:
                 batch = {k: v.to(self.device) for k, v in arr_dict["img_pymafx"].items()}
                 preds_dict, _ = self.hps.forward(batch)
             elif self.hps_type == 'smplerx':
-                #这里应该把事先存好的文件读进predict
-                pass
+                npz_path = self.npz_list[index]
+                param = loadnpz(npz_path)
 
         arr_dict["smpl_faces"] = (
             torch.as_tensor(self.smpl_data.smplx_faces.astype(np.int64)).unsqueeze(0).long().to(
@@ -190,16 +195,27 @@ class TestDataset:
             arr_dict["smpl_verts"] = preds_dict["vertices"]
             scale, tranX, tranY = preds_dict["cam"].split(1, dim=1)
             # 1.1435, 0.0128, 0.3520
+
         elif self.hps_type == 'smplerx':
             #这里应给arr_dict['']赋值
+            arr_dict["betas"] = param['betas']    #10
+            arr_dict["body_pose"] = param['body_pose']
+            arr_dict["global_orient"] = param['global_orient']
+            arr_dict["left_hand_pose"] = param['left_hand_pose']
+            arr_dict["right_hand_pose"] = param["right_hande pose"]
+            arr_dict['jaw_pose'] = param['jaw_pose']
+            arr_dict["exp"] = param["expression"]
             pass
         
-
-        arr_dict["scale"] = scale.unsqueeze(1)
-        arr_dict["trans"] = (
-            torch.cat([tranX, tranY, torch.zeros_like(tranX)],
-                      dim=1).unsqueeze(1).to(self.device).float()
-        )
+        if self.hps_type != 'smplerx':
+            arr_dict["scale"] = scale.unsqueeze(1)
+            arr_dict["trans"] = (
+                torch.cat([tranX, tranY, torch.zeros_like(tranX)],
+                        dim=1).unsqueeze(1).to(self.device).float()
+            )
+        else:
+            arr_dict["scale"] = 1
+            arr_dict["trans"] = param['transl']
 
         # data_dict info (key-shape):
         # scale, tranX, tranY - tensor.float

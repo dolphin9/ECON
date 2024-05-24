@@ -197,15 +197,20 @@ def lbs(
     # NxJx3 array
     J = vertices2joints(J_regressor, v_shaped)
 
+    print('J',J.shape)
+
     # 3. Add pose blend shapes
     # N x J x 3 x 3
     ident = torch.eye(3, dtype=dtype, device=device)
+    print('ident',ident.shape)
 
     if pose2rot:
         rot_mats = batch_rodrigues(pose.view(-1, 3)).view([batch_size, -1, 3, 3])
 
         pose_feature = (rot_mats[:, 1:, :, :] - ident).view([batch_size, -1])
         # (N x P) x (P, V * 3) -> N x V x 3
+        print('pose_feature', pose_feature.shape)
+        print('posedirs',posedirs.shape)
         pose_offsets = torch.matmul(pose_feature, posedirs).view(batch_size, -1, 3)
     else:
         pose_feature = pose[:, 1:].view(batch_size, -1, 3, 3) - ident
@@ -363,6 +368,8 @@ def blend_shapes(betas: Tensor, shape_disps: Tensor) -> Tensor:
     # Displacement[b, m, k] = sum_{l} betas[b, l] * shape_disps[m, k, l]
     # i.e. Multiply each shape displacement by its corresponding beta and
     # then sum them.
+    print('betas',betas.shape)
+    print('shape_disps', shape_disps.shape)
     blend_shape = torch.einsum("bl,mkl->bmk", [betas, shape_disps])
     return blend_shape
 

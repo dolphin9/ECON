@@ -33,6 +33,7 @@ from scipy.spatial import cKDTree
 
 import lib.smplx as smplx
 from lib.common.render_utils import Pytorch3dRasterizer, face_vertices
+from lib.kornia.axis2matrix import axis_angle_to_rotation_matrix
 
 
 class Format:
@@ -209,6 +210,10 @@ def load_fit_body(fitted_path, scale, smpl_type="smplx", smpl_gender="neutral", 
 
     for item in param:
         param[item] = torch.as_tensor(param[item])
+        if param[item].shape[1] == 3:
+            param[item] = axis_angle_to_rotation_matrix(param[item]).unsqueeze(0)
+        #print(param[item].shape)
+
 
     # for key in param.keys():
     #     param[key] = torch.as_tensor(param[key])
